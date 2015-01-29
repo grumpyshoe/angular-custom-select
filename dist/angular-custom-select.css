@@ -1,0 +1,23 @@
+.tpl-select {
+  position: relative;
+}
+.tpl-select__trigger {
+  cursor: pointer;
+  background: #8f8;
+}
+.tpl-select__list {
+  position: absolute;
+  z-index: 5;
+  display: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  background: #f88;
+}
+.tpl-select__list-item {
+  cursor: pointer;
+  background: #88f;
+}
+
+/*# sourceMappingURL=angular-custom-select.css.map */
