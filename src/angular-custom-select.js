@@ -75,12 +75,7 @@ angular.module('tpl.select', [])
         //bind click on item
         var listItem = angular.element(element.querySelectorAll('.tpl-select__list'));
         listItem.bind('click', function(e){
-          var currentStyle = e.target.parentElement.getElementsByClassName('tpl-select__list')[0].style.display;
-          if(currentStyle === 'block'){
-            e.target.parentElement.getElementsByClassName('tpl-select__list')[0].style.display = 'none';
-          }else {
-            e.target.parentElement.getElementsByClassName('tpl-select__list')[0].style.display = 'block';
-          }
+          e.target.parentElement.style.display = 'none';
         });
       }
     }
