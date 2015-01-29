@@ -2,7 +2,7 @@
  * @ngdoc directive
  * @name tpl-select
  * @description
- * 
+ *
  * Creates a customizable select dropdown
  *
  * Attributes:
@@ -35,10 +35,9 @@ angular.module('tpl.select', [])
   return {
     restrict: 'A',
     controller: 'tplSelectController',
-    //templateUrl : 'components/directives/tpl-select/tpl-select.html',
     template : '<div class="tpl-select">' +
                   '<div class="tpl-select__trigger">{{ngModel[tplLabel] | translate}}</div>' +
-                  '<ul class="tpl-select__list">' +
+                  '<ul class="tpl-select__list tpl-select__list--invisible">' +
                     '<li  class="tpl-select__list-item" ng-repeat="option in tplOptions" ng-Click="select(option)">' +
                     '{{option[tplLabel] | translate}}' +
                     '</li>' +
@@ -64,18 +63,25 @@ angular.module('tpl.select', [])
         //bind click on trigger
         var trigger = angular.element(element.querySelectorAll('.tpl-select__trigger'));
         trigger.bind('click', function(e){
-          var currentStyle = e.target.parentElement.getElementsByClassName('tpl-select__list')[0].style.display;
-          if(currentStyle === 'block'){
-            e.target.parentElement.getElementsByClassName('tpl-select__list')[0].style.display = 'none';
+          var invisibleFlag = 'tpl-select__list--invisible';
+          var selectList = e.target.parentElement.getElementsByClassName('tpl-select__list')[0];
+          if(selectList.className.indexOf(invisibleFlag) > -1){
+            //hide all open select fields
+            angular.element(document.getElementsByClassName('tpl-select__list')).addClass(invisibleFlag);
+
+            //show list
+            angular.element(selectList).removeClass(invisibleFlag);
+
           }else {
-            e.target.parentElement.getElementsByClassName('tpl-select__list')[0].style.display = 'block';
+            //hide list
+            angular.element(selectList).addClass(invisibleFlag);
           }
         });
 
         //bind click on item
         var listItem = angular.element(element.querySelectorAll('.tpl-select__list'));
         listItem.bind('click', function(e){
-          e.target.parentElement.style.display = 'none';
+          angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
         });
       }
     }
