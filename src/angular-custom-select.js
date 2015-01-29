@@ -78,9 +78,14 @@ angular.module('tpl.select', [])
           }
         });
 
-        //bind click on item
-        var listItem = angular.element(element.querySelectorAll('.tpl-select__list'));
-        listItem.bind('click', function(e){
+        //bind click on list
+        var list = angular.element(element.querySelectorAll('.tpl-select__list'));
+        list.bind('click', function(e){
+          angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
+        });
+
+        //bind mouseleave on list
+        list.bind('mouseleave', function(e){
           angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
         });
       }
