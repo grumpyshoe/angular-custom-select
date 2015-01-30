@@ -1,3 +1,4 @@
+(function(){
 /**
  * @ngdoc directive
  * @name tpl-select
@@ -19,7 +20,7 @@
  *   <option value="key1">label1</option>
  *   <option value="key2">label2</option>
  * </select>
- * 
+ *
  *  Note:
  *  There is no real styling! You have to style the dropdown by your own!
  */
@@ -35,10 +36,68 @@ angular.module('tpl.select', [])
     $scope.modelHolder.$setViewValue(option);
   };
 
-
 }])
 
-.directive('tplSelect', function() {
+.factory('tplSelectService', function(){
+  return {
+
+    /**
+     * bind event for click on trigger
+     *
+     * @param  {object} element
+     */
+    bindTriggerClick : function bindTrigger(element){
+      //bind click on trigger
+      var trigger = angular.element(element.querySelectorAll('.tpl-select__trigger'));
+      trigger.bind('click', function(e){
+        var invisibleFlag = 'tpl-select__list--invisible';
+        var selectList = e.target.parentElement.getElementsByClassName('tpl-select__list')[0];
+        if(selectList.className.indexOf(invisibleFlag) > -1){
+          //hide all open select fields
+          angular.element(document.getElementsByClassName('tpl-select__list')).addClass(invisibleFlag);
+
+          //show list
+          angular.element(selectList).removeClass(invisibleFlag);
+
+        }else {
+          //hide list
+          angular.element(selectList).addClass(invisibleFlag);
+        }
+      });
+    },
+
+    /**
+     * bind event for click on list
+     *
+     * @param  {object} element
+     */
+    bindListClick : function bindListClick(element){
+      //bind click on list
+      var list = angular.element(element.querySelectorAll('.tpl-select__list'));
+      list.bind('click', function(e){
+        angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
+      });
+    },
+
+    /**
+     * bind event for leaving list
+     *
+     * @param  {object} element
+     */
+    bindListMouseleave : function bindListMouseleave(element){
+      //bind mouseleave on list
+      var list = angular.element(element.querySelectorAll('.tpl-select__list'));
+      list.bind('mouseleave', function(e){
+        angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
+      });
+    }
+  }
+
+})
+
+.directive('tplSelect', [
+  'tplSelectService',
+  function(tplSelectService) {
   return {
     restrict: 'A',
     controller: 'tplSelectController',
@@ -68,41 +127,18 @@ angular.module('tpl.select', [])
         //set init value with first option
         ngModel.$setViewValue(scope.tplOptions[0]);
 
-        //bind click on trigger
-        var trigger = angular.element(element.querySelectorAll('.tpl-select__trigger'));
-        trigger.bind('click', function(e){
-          var invisibleFlag = 'tpl-select__list--invisible';
-          var selectList = e.target.parentElement.getElementsByClassName('tpl-select__list')[0];
-          if(selectList.className.indexOf(invisibleFlag) > -1){
-            //hide all open select fields
-            angular.element(document.getElementsByClassName('tpl-select__list')).addClass(invisibleFlag);
+        // bind trigger events
+        tplSelectService.bindTriggerClick(element);
 
-            //show list
-            angular.element(selectList).removeClass(invisibleFlag);
-
-          }else {
-            //hide list
-            angular.element(selectList).addClass(invisibleFlag);
-          }
-        });
-
-        //bind click on list
-        var list = angular.element(element.querySelectorAll('.tpl-select__list'));
-        list.bind('click', function(e){
-          angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
-        });
-
-        //bind mouseleave on list
-        list.bind('mouseleave', function(e){
-          angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
-        });
-
+        //bind list events
+        tplSelectService.bindListClick(element);
+        tplSelectService.bindListMouseleave(element);
       }
     }
   };
+}
 
-
-})
+])
 
 .controller('tplSelectStaticController', ['$scope', '$transclude', function ($scope) {
 
@@ -112,77 +148,62 @@ angular.module('tpl.select', [])
     $scope.modelHolder.$setViewValue(option);
   };
 
-
 }])
 
-.directive('tplSelectStatic', function() {
-  return {
-    restrict: 'A',
-    controller: 'tplSelectStaticController',
-    template :  '<div class="tpl-select">' +
-                  '<div class="tpl-select__trigger">{{ngModel.label | translate}}</div>' +
-                  '<ul class="tpl-select__list tpl-select__list--invisible">' +
-                    '<li class="tpl-select__list-item" ng-repeat="option in tplOptions" ng-Click="select(option)">' +
-                      '{{option.label | translate}}' +
-                    '</li>' +
-                  '</ul>' +
-                '</div>',
-    transclude: true,
-    replace: true,
-    scope : {
-      ngModel: '='
-    },
-    require : 'ngModel',
-    link: function(scope, element, attrs, ngModel, transclude) {
+.directive('tplSelectStatic', [
+  'tplSelectService',
+  function(tplSelectService) {
+    return {
+      restrict: 'A',
+      controller: 'tplSelectStaticController',
+      template :  '<div class="tpl-select">' +
+                    '<div class="tpl-select__trigger">{{ngModel.label | translate}}</div>' +
+                    '<ul class="tpl-select__list tpl-select__list--invisible">' +
+                      '<li class="tpl-select__list-item" ng-repeat="option in tplOptions" ng-Click="select(option)">' +
+                        '{{option.label | translate}}' +
+                      '</li>' +
+                    '</ul>' +
+                  '</div>',
+      transclude: true,
+      replace: true,
+      scope : {
+        ngModel: '='
+      },
+      require : 'ngModel',
+      link: function(scope, element, attrs, ngModel, transclude) {
 
-      //set modelHolder
-      scope.modelHolder = ngModel;
+        //set modelHolder
+        scope.modelHolder = ngModel;
 
-      transclude(function(clone, childScope){
-        for(var i=0; i<clone.length; i++){
-          if(clone[i].value){
-            var data = {};
-            data.key = clone[i].value;
-            data.label = clone[i].innerHTML;
-            scope.tplOptions.push(data);
+        transclude(function(clone, childScope){
+          //iterate through clone-items and store all option items
+          for(var i=0; i<clone.length; i++){
+            if(clone[i].value){
+              var data = {};
+              data.key = clone[i].value;
+              data.label = clone[i].innerHTML;
+              scope.tplOptions.push(data);
+            }
           }
-        }
-        clone = '';
 
-        //set init value with first option
-        ngModel.$setViewValue(scope.tplOptions[0]);
-      });
+          //delete clone content
+          clone = '';
 
-      //bind click on trigger
-      var trigger = angular.element(element.querySelectorAll('.tpl-select__trigger'));
-      trigger.bind('click', function(e){
-        var invisibleFlag = 'tpl-select__list--invisible';
-        var selectList = e.target.parentElement.getElementsByClassName('tpl-select__list')[0];
-        if(selectList.className.indexOf(invisibleFlag) > -1){
-            //hide all open select fields
-            angular.element(document.getElementsByClassName('tpl-select__list')).addClass(invisibleFlag);
-
-            //show list
-            angular.element(selectList).removeClass(invisibleFlag);
-
-          }else {
-            //hide list
-            angular.element(selectList).addClass(invisibleFlag);
-          }
+          //set init value with first option
+          ngModel.$setViewValue(scope.tplOptions[0]);
         });
 
-      //bind click on list
-      var list = angular.element(element.querySelectorAll('.tpl-select__list'));
-      list.bind('click', function(e){
-        angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
-      });
+          // bind trigger events
+          tplSelectService.bindTriggerClick(element);
 
-      //bind mouseleave on list
-      list.bind('mouseleave', function(e){
-        angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
-      });
-
-      console.log('');
+          //bind list events
+          tplSelectService.bindListClick(element);
+          tplSelectService.bindListMouseleave(element);
+      }
 
     }
-  }});
+  }
+]);
+
+
+}());
