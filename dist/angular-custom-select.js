@@ -57,14 +57,24 @@
         //bind click on list
         var list = angular.element(element.querySelectorAll('.tpl-select__list'));
         list.bind('click', function (e) {
-          angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
+          if (e.target.className.indexOf('tpl-select__list-item') > -1) {
+            angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
+          } else {
+            angular.element(e.target).addClass('tpl-select__list--invisible');
+          }
+          e.preventDefault();
         });
       },
       bindListMouseleave: function bindListMouseleave(element) {
         //bind mouseleave on list
         var list = angular.element(element.querySelectorAll('.tpl-select__list'));
         list.bind('mouseleave', function (e) {
-          angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
+          if (e.target.className.indexOf('tpl-select__list-item') > -1) {
+            angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
+          } else {
+            angular.element(e.target).addClass('tpl-select__list--invisible');
+          }
+          e.preventDefault();  //angular.element(e.target).addClass('tpl-select__list--invisible');
         });
       }
     };
