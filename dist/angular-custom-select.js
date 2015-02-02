@@ -32,7 +32,7 @@
   angular.module('tpl.select', []).factory('tplSelectService', function () {
     var getList = function getList(element) {
       var selectRoot = findSelectRoot(element);
-      return selectRoot.find('.tpl-select__list');
+      return selectRoot.querySelectorAll('.tpl-select__list');
     };
     var findSelectRoot = function findSelectRoot(element) {
       if (angular.element(element).hasClass('tpl-select')) {

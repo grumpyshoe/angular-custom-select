@@ -36,7 +36,7 @@ angular.module('tpl.select', [])
 
   var getList = function getList(element){
     var selectRoot = findSelectRoot(element);
-    return selectRoot.find('.tpl-select__list');
+    return selectRoot.querySelectorAll('.tpl-select__list');
   }
 
   var findSelectRoot = function findSelectRoot(element){
