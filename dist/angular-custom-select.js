@@ -13,36 +13,41 @@
  * ng-model: the model where the data should be saved
  *
  * @example creating dynamic filled select field (tpl-select):
- * <select tpl-select tpl-options="myOptions" tpl-label="myLabelKey" ng-model="myModel"></select>
+ * <div tpl-select tpl-options="myOptions" tpl-label="myLabelKey" ng-model="myModel"></div>
+ *
+ * @example creating dynamic filled select field by using String-array for parameter(tpl-select):
+ * <div tpl-select tpl-options="myOptions" ng-model="myModel"></div>
  *
  * @example creating static filled select field (tpl-select-static):
- * <select tpl-select-static ng-model="myModel">
+ * <div tpl-select-static ng-model="myModel">
  *   <option value="key1">label1</option>
  *   <option value="key2">label2</option>
- * </select>
+ * </div>
  *
  *  Note:
  *  There is no real styling! You have to style the dropdown by your own!
  */
   'use strict';
   //login directive
-  angular.module('tpl.select', []).controller('tplSelectController', [
-    '$scope',
-    function ($scope) {
-      $scope.modelHolder = null;
-      $scope.select = function (option) {
-        $scope.modelHolder.$setViewValue(option);
-      };
-    }
-  ]).factory('tplSelectService', function () {
+  angular.module('tpl.select', []).factory('tplSelectService', function () {
+    var getList = function getList(element) {
+      var selectRoot = findSelectRoot(element);
+      return selectRoot.find('.tpl-select__list');
+    };
+    var findSelectRoot = function findSelectRoot(element) {
+      if (angular.element(element).hasClass('tpl-select')) {
+        return element;
+      }
+      return findSelectRoot(element.parentElement);
+    };
     return {
       bindTriggerClick: function bindTrigger(element) {
         //bind click on trigger
         var trigger = angular.element(element.querySelectorAll('.tpl-select__trigger'));
         trigger.bind('click', function (e) {
           var invisibleFlag = 'tpl-select__list--invisible';
-          var selectList = e.target.parentElement.getElementsByClassName('tpl-select__list')[0];
-          if (selectList.className.indexOf(invisibleFlag) > -1) {
+          var selectList = getList(element);
+          if (selectList[0].className.indexOf(invisibleFlag) > -1) {
             //hide all open select fields
             angular.element(document.getElementsByClassName('tpl-select__list')).addClass(invisibleFlag);
             //show list
@@ -55,36 +60,37 @@
       },
       bindListClick: function bindListClick(element) {
         //bind click on list
-        var list = angular.element(element.querySelectorAll('.tpl-select__list'));
+        var list = getList(element);
         list.bind('click', function (e) {
-          if (e.target.className.indexOf('tpl-select__list-item') > -1) {
-            angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
-          } else {
-            angular.element(e.target).addClass('tpl-select__list--invisible');
-          }
+          getList(element).addClass('tpl-select__list--invisible');
           e.preventDefault();
         });
       },
       bindListMouseleave: function bindListMouseleave(element) {
         //bind mouseleave on list
-        var list = angular.element(element.querySelectorAll('.tpl-select__list'));
+        var list = getList(element);
         list.bind('mouseleave', function (e) {
-          if (e.target.className.indexOf('tpl-select__list-item') > -1) {
-            angular.element(e.target.parentElement).addClass('tpl-select__list--invisible');
-          } else {
-            angular.element(e.target).addClass('tpl-select__list--invisible');
-          }
-          e.preventDefault();  //angular.element(e.target).addClass('tpl-select__list--invisible');
+          getList(element).addClass('tpl-select__list--invisible');
+          e.preventDefault();
         });
       }
     };
-  }).directive('tplSelect', [
+  }).controller('tplSelectController', [
+    '$scope',
+    function ($scope) {
+      $scope.modelHolder = null;
+      $scope.notSet = 'null';
+      $scope.select = function (option) {
+        $scope.modelHolder.$setViewValue(option);
+      };
+    }
+  ]).directive('tplSelect', [
     'tplSelectService',
     function (tplSelectService) {
       return {
         restrict: 'A',
         controller: 'tplSelectController',
-        template: '<div class="tpl-select">' + '<div class="tpl-select__trigger">{{ngModel[tplLabel] | translate}}</div>' + '<ul class="tpl-select__list tpl-select__list--invisible">' + '<li class="tpl-select__list-item" ng-repeat="option in tplOptions" ng-Click="select(option)">' + '{{option[tplLabel] | translate}}' + '</li>' + '</ul>' + '</div>',
+        template: '<div class="tpl-select">' + '<div class="tpl-select__trigger">' + '<div ng-if="tplLabel">{{ngModel[tplLabel] | translate}}</div>' + '<div ng-if="!tplLabel">{{ngModel | translate}}</div>' + '</div>' + '<ul class="tpl-select__list tpl-select__list--invisible">' + '<li class="tpl-select__list-item" ng-repeat="option in tplOptions" ng-Click="select(option)">' + '<div ng-if="tplLabel">{{option[tplLabel] | translate}}</div>' + '<div ng-if="!tplLabel">{{option | translate}}</div>' + '</li>' + '</ul>' + '</div>',
         replace: true,
         scope: {
           ngModel: '=',
@@ -98,8 +104,10 @@
           //check if options available
           if (scope.tplOptions) {
             //set init value with first option
-            ngModel.$setViewValue(scope.tplOptions[0]);
-            // bind trigger events
+            if (scope.tplOptions.length > 0) {
+              scope.ngModel = scope.tplOptions[0];
+            }
+            //bind trigger events
             tplSelectService.bindTriggerClick(element);
             //bind list events
             tplSelectService.bindListClick(element);

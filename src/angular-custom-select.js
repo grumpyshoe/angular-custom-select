@@ -13,16 +13,16 @@
  * ng-model: the model where the data should be saved
  *
  * @example creating dynamic filled select field (tpl-select):
- * <select tpl-select tpl-options="myOptions" tpl-label="myLabelKey" ng-model="myModel"></select>
+ * <div tpl-select tpl-options="myOptions" tpl-label="myLabelKey" ng-model="myModel"></div>
  *
  * @example creating dynamic filled select field by using String-array for parameter(tpl-select):
- * <select tpl-select tpl-options="myOptions" ng-model="myModel"></select>
+ * <div tpl-select tpl-options="myOptions" ng-model="myModel"></div>
  *
  * @example creating static filled select field (tpl-select-static):
- * <select tpl-select-static ng-model="myModel">
+ * <div tpl-select-static ng-model="myModel">
  *   <option value="key1">label1</option>
  *   <option value="key2">label2</option>
- * </select>
+ * </div>
  *
  *  Note:
  *  There is no real styling! You have to style the dropdown by your own!
@@ -142,16 +142,18 @@ angular.module('tpl.select', [])
     require : 'ngModel',
     link: function(scope, element, attrs, ngModel) {
 
-      //check if options available
-      if(scope.tplOptions){
-
         //set modelHolder
         scope.modelHolder = ngModel;
 
-        //set init value with first option
-       ngModel.$setViewValue(scope.tplOptions[0]);
+      //check if options available
+      if(scope.tplOptions){
 
-        // bind trigger events
+        //set init value with first option
+        if(scope.tplOptions.length > 0){
+          scope.ngModel = scope.tplOptions[0];
+        }
+
+        //bind trigger events
         tplSelectService.bindTriggerClick(element);
 
         //bind list events

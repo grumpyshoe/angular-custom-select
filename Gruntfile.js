@@ -7,6 +7,15 @@ module.exports = function(grunt) {
   // Project configuration
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+     watch: {
+      js: {
+          files: ['src/{,**/}*.js'],
+          tasks: ['build'],
+      },
+      gruntfile: {
+          files: ['Gruntfile.js']
+      },
+    },
     yo: {
       src: 'src',
       dist: 'dist'
