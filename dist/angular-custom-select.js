@@ -75,18 +75,36 @@
         });
       }
     };
+  }).factory('tplSelectCacheService', function () {
+    var cachedValue = {};
+    var PUBLIC = {};
+    var validateKey = function validateKey(key) {
+      return key.replace('.', '_').replace('[', '_').replace(']', '_');
+    };
+    PUBLIC.setValue = function (key, value) {
+      key = validateKey(key);
+      cachedValue[key] = value;
+    };
+    PUBLIC.getValue = function (key) {
+      key = validateKey(key);
+      return cachedValue[key];
+    };
+    return PUBLIC;
   }).controller('tplSelectController', [
     '$scope',
-    function ($scope) {
+    'tplSelectCacheService',
+    function ($scope, tplSelectCacheService) {
       $scope.modelHolder = null;
-      $scope.notSet = 'null';
+      $scope.key = null;
       $scope.select = function (option) {
         $scope.modelHolder.$setViewValue(option);
+        tplSelectCacheService.setValue($scope.key, option);
       };
     }
   ]).directive('tplSelect', [
     'tplSelectService',
-    function (tplSelectService) {
+    'tplSelectCacheService',
+    function (tplSelectService, tplSelectCacheService) {
       return {
         restrict: 'A',
         controller: 'tplSelectController',
@@ -101,11 +119,14 @@
         link: function (scope, element, attrs, ngModel) {
           //set modelHolder
           scope.modelHolder = ngModel;
+          //set identifier
+          scope.key = attrs.ngModel;
           //check if options available
           if (scope.tplOptions) {
             //set init value with first option
             if (scope.tplOptions.length > 0) {
-              scope.ngModel = scope.tplOptions[0];
+              var value = tplSelectCacheService.getValue(scope.key) || scope.tplOptions[0];
+              ngModel.$setViewValue(value);
             }
             //bind trigger events
             tplSelectService.bindTriggerClick(element);
@@ -118,17 +139,20 @@
     }
   ]).controller('tplSelectStaticController', [
     '$scope',
-    '$transclude',
-    function ($scope) {
+    'tplSelectCacheService',
+    function ($scope, tplSelectCacheService) {
       $scope.modelHolder = null;
+      $scope.key = null;
       $scope.tplOptions = [];
       $scope.select = function (option) {
         $scope.modelHolder.$setViewValue(option);
+        tplSelectCacheService.setValue($scope.key, option);
       };
     }
   ]).directive('tplSelectStatic', [
     'tplSelectService',
-    function (tplSelectService) {
+    'tplSelectCacheService',
+    function (tplSelectService, tplSelectCacheService) {
       return {
         restrict: 'A',
         controller: 'tplSelectStaticController',
@@ -140,6 +164,8 @@
         link: function (scope, element, attrs, ngModel, transclude) {
           //set modelHolder
           scope.modelHolder = ngModel;
+          //set identifier
+          scope.key = attrs.ngModel;
           transclude(function (clone, childScope) {
             //iterate through clone-items and store all option items
             for (var i = 0; i < clone.length; i++) {
@@ -153,7 +179,8 @@
             //delete clone content
             clone = '';
             //set init value with first option
-            ngModel.$setViewValue(scope.tplOptions[0]);
+            var value = tplSelectCacheService.getValue(scope.key) || scope.tplOptions[0];
+            ngModel.$setViewValue(value);
           });
           // bind trigger events
           tplSelectService.bindTriggerClick(element);

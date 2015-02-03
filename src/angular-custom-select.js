@@ -32,6 +32,9 @@
 //login directive
 angular.module('tpl.select', [])
 
+/**
+ * tplSelectService
+ */
 .factory('tplSelectService', function(){
 
   var getList = function getList(element){
@@ -105,19 +108,52 @@ angular.module('tpl.select', [])
 
 })
 
-.controller('tplSelectController', ['$scope', function ($scope) {
+/**
+ * tplSelectCacheService
+ */
+.factory('tplSelectCacheService', function(){
+  var cachedValue = {};
+  var PUBLIC = {};
+  var validateKey = function validateKey(key){
+    return key.replace('\.', '_').replace('\[', '_').replace('\]', '_');
+  }
+  PUBLIC.setValue = function(key, value){
+    key = validateKey(key);
+    cachedValue[key] = value;
+  }
+  PUBLIC.getValue = function(key){
+    key = validateKey(key);
+    return cachedValue[key];
+  }
+
+  return PUBLIC;
+})
+
+
+/**
+ * tplSelect - controller
+ */
+.controller('tplSelectController', [
+  '$scope',
+  'tplSelectCacheService',
+  function ($scope, tplSelectCacheService) {
 
   $scope.modelHolder = null;
-  $scope.notSet = 'null';
+  $scope.key = null;
   $scope.select = function(option){
    $scope.modelHolder.$setViewValue(option);
+    tplSelectCacheService.setValue($scope.key, option);
   };
 
 }])
 
+/**
+ * tplSelect - directive
+ */
 .directive('tplSelect', [
   'tplSelectService',
-  function(tplSelectService) {
+  'tplSelectCacheService',
+  function(tplSelectService, tplSelectCacheService) {
   return {
     restrict: 'A',
     controller: 'tplSelectController',
@@ -145,12 +181,16 @@ angular.module('tpl.select', [])
         //set modelHolder
         scope.modelHolder = ngModel;
 
+        //set identifier
+        scope.key = attrs.ngModel;
+
       //check if options available
       if(scope.tplOptions){
 
         //set init value with first option
         if(scope.tplOptions.length > 0){
-          scope.ngModel = scope.tplOptions[0];
+          var value = tplSelectCacheService.getValue(scope.key) || scope.tplOptions[0];
+          ngModel.$setViewValue(value);
         }
 
         //bind trigger events
@@ -166,19 +206,31 @@ angular.module('tpl.select', [])
 
 ])
 
-.controller('tplSelectStaticController', ['$scope', '$transclude', function ($scope) {
+/**
+ * tplSelectStatic - controller
+ */
+.controller('tplSelectStaticController', [
+  '$scope',
+  'tplSelectCacheService',
+  function ($scope, tplSelectCacheService) {
 
   $scope.modelHolder = null;
+  $scope.key = null;
   $scope.tplOptions = [];
   $scope.select = function(option){
     $scope.modelHolder.$setViewValue(option);
+    tplSelectCacheService.setValue($scope.key, option);
   };
 
 }])
 
+/**
+ * tplselectStatic - directive
+ */
 .directive('tplSelectStatic', [
   'tplSelectService',
-  function(tplSelectService) {
+  'tplSelectCacheService',
+  function(tplSelectService, tplSelectCacheService) {
     return {
       restrict: 'A',
       controller: 'tplSelectStaticController',
@@ -201,6 +253,9 @@ angular.module('tpl.select', [])
         //set modelHolder
         scope.modelHolder = ngModel;
 
+        //set identifier
+        scope.key = attrs.ngModel;
+
         transclude(function(clone, childScope){
           //iterate through clone-items and store all option items
           for(var i=0; i<clone.length; i++){
@@ -216,7 +271,8 @@ angular.module('tpl.select', [])
           clone = '';
 
           //set init value with first option
-          ngModel.$setViewValue(scope.tplOptions[0]);
+          var value = tplSelectCacheService.getValue(scope.key) || scope.tplOptions[0];
+          ngModel.$setViewValue(value);
         });
 
           // bind trigger events
